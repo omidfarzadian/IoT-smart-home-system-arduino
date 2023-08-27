@@ -8,10 +8,10 @@
 // #define SSID "Lord of the Pings"
 // #define PASS "7YWSKDAY"
 
-#define SSID "WSN-364 8884"
-#define PASS "@0Ce0585"
+#define SSID "Kav"
+#define PASS "33457043"
 
-#define BASE_URL "http://192.168.1.98:8585"
+#define BASE_URL "http://192.168.1.126:2501"
 
 ESP8266WiFiMulti WiFiMulti;
 WiFiClient client;
@@ -20,6 +20,7 @@ HTTPClient http;
 int LED_STATUS = 0;
 int HEATER_STATUS = 0;
 int MOTOR_STATUS = 0;
+int LIGHT_INTENSITY = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -27,15 +28,16 @@ void setup() {
 }
 
 void loop() {
-  if (WiFiMulti.run() == WL_CONNECTED) {
+  if (WiFi.status() == WL_CONNECTED) {
     LED_STATUS = getLightStatus();
     HEATER_STATUS = getHeaterStatus();
     MOTOR_STATUS = getMotorStatus();
+    LIGHT_INTENSITY = getLightIntensity();
 
-    Serial.println(LED_STATUS + HEATER_STATUS + MOTOR_STATUS);
+    Serial.print(LED_STATUS*4 + HEATER_STATUS*2 + MOTOR_STATUS);
+    Serial.println(LIGHT_INTENSITY);
   }
-  Serial.println(WiFiMulti.run());
-  delay(500);
+  delay(1000);
 }
 
 void connectToWifi() {
@@ -45,8 +47,8 @@ void connectToWifi() {
     delay(1000);
   }
 
-  WiFi.mode(WIFI_AP);
-  WiFiMulti.addAP(SSID, PASS);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(SSID, PASS);
 }
 
 int getHeaterStatus() {
@@ -58,7 +60,7 @@ int getHeaterStatus() {
     if (httpCode == HTTP_CODE_OK) {
       String response = http.getString();
       if(response == "ON") {
-        return 2;
+        return 1;
       } else {
         return 0;
       }
@@ -80,7 +82,7 @@ int getLightStatus() {
     if (httpCode == HTTP_CODE_OK) {
       String response = http.getString();
       if(response == "ON") {
-        return 4;
+        return 1;
       } else {
         return 0;
       }
@@ -114,3 +116,22 @@ int getMotorStatus() {
   }
   return 0;
 }
+
+int getLightIntensity() {
+  String URI = "/api/v1/light/intensity";
+  
+  if (http.begin(client, BASE_URL+URI)) {
+    int httpCode = http.GET();
+    
+    if (httpCode == HTTP_CODE_OK) {
+      String response = http.getString();
+      return response.toInt();
+    }
+
+    http.end();
+  } else {
+    Serial.println("[HTTP] Unable to connect");
+  }
+  return 0;
+} 
+
