@@ -5,13 +5,10 @@
 #include <WiFiClient.h>
 #include <SoftwareSerial.h>
 
-// #define SSID "Lord of the Pings"
-// #define PASS "7YWSKDAY"
+#define SSID "Lord of the Pings"
+#define PASS "7YWSKDAY"
 
-#define SSID "Kav"
-#define PASS "33457043"
-
-#define BASE_URL "http://192.168.1.126:2501"
+#define BASE_URL "http://192.168.1.98:2500"
 
 ESP8266WiFiMulti WiFiMulti;
 WiFiClient client;
@@ -56,7 +53,6 @@ int getHeaterStatus() {
   
   if (http.begin(client, BASE_URL+URI)) {
     int httpCode = http.GET();
-    
     if (httpCode == HTTP_CODE_OK) {
       String response = http.getString();
       if(response == "ON") {
@@ -100,7 +96,6 @@ int getMotorStatus() {
   
   if (http.begin(client, BASE_URL+URI)) {
     int httpCode = http.GET();
-    
     if (httpCode == HTTP_CODE_OK) {
       String response = http.getString();
       if(response == "ON") {

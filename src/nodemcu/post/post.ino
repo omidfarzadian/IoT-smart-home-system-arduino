@@ -1,19 +1,12 @@
-/**
-   PostHTTPClient.ino
-
-    Created on: 21.11.2016
-
-*/
-
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 
 #include <SoftwareSerial.h>
 
-#define BASE_URL "http://192.168.1.126:2501"
+#define BASE_URL "http://192.168.1.98:2500"
 
-#define SSID "Kav"
-#define PASS "33457043"
+#define SSID "Lord of the Pings"
+#define PASS "7XYSKDAY"
 
 SoftwareSerial arduino(2, 3);
 
@@ -22,7 +15,7 @@ HTTPClient http;
 
 void setup() {
 
-  Serial.begin(230400);
+  Serial.begin(115200);
   arduino.begin(9600);
 
   WiFi.begin(SSID, PASS);
@@ -33,59 +26,66 @@ void setup() {
 }
 
 void loop() {
-  // wait for WiFi connection
   if ((WiFi.status() == WL_CONNECTED)) {
-
-
-    // Serial.print("[HTTP] begin...\n");
-    // // configure traged server and url
-    // http.begin(client, "http://" SERVER_IP "/postplain/");  // HTTP
-    // http.addHeader("Content-Type", "application/json");
-
-    // Serial.print("[HTTP] POST...\n");
-    // // start connection and send HTTP header and body
-    // int httpCode = http.POST("{\"hello\":\"world\"}");
-
-    // // httpCode will be negative on error
-    // if (httpCode > 0) {
-    //   // HTTP header has been send and Server response header has been handled
-    //   Serial.printf("[HTTP] POST... code: %d\n", httpCode);
-
-    //   // file found at server
-    //   if (httpCode == HTTP_CODE_OK) {
-    //     const String& payload = http.getString();
-    //     Serial.println("received payload:\n<<");
-    //     Serial.println(payload);
-    //     Serial.println(">>");
-    //   }
-    // } else {
-    //   Serial.printf("[HTTP] POST... failed, error: %s\n", http.errorToString(httpCode).c_str());
-    // }
-
-    // http.end();
-
-    sendHumidityData();
+    readDataFromArduino();
   }
 
   delay(1000);
 }
 
-void sendHumidityData() {
-  http.begin(client, BASE_URL "/api/v1/humidity/change/");  // HTTP
+void readDataFromArduino() {
+  if (arduino.available()) {
+     String data = arduino.readString();
+     data.trim();
+     
+    String humidity = data.substring(0, 4);
+    String temperature = data.substring(5, 9);
+    String intensity = data.substring(10, 11);
+
+    sendHumidityData(humidity);
+    sendTemperatureData(temperature);
+    sendLightIntensityData(intensity);
+  }
+}
+
+void sendHumidityData(String humidity) {
+  String URI = "/api/v1/humidity/change/";
+  http.begin(client, BASE_URL);
   http.addHeader("Content-Type", "application/json");
 
-  int httpCode = http.POST("{\"Humidity\":\"28.7\"}");
+  int httpCode = http.POST("{Humidity:" + humidity + "}");
 
-  if (httpCode > 0) {
-      // HTTP header has been send and Server response header has been handled
+  if (httpCode > 0 && httpCode == HTTP_CODE_OK ) {
+    const String& payload = http.getString();
+  }
 
-      // file found at server
-      if (httpCode == HTTP_CODE_OK) {
-        const String& payload = http.getString();
-      }
-    } else {
-      Serial.printf("[HTTP] POST... failed, error: %s\n", http.errorToString(httpCode).c_str());
-    }
+  http.end();
+}
 
-    http.end();
+void sendTemperatureData(String temperature) {
+  String URI = "/api/v1/temperature/change/";
+  http.begin(client, BASE_URL);
+  http.addHeader("Content-Type", "application/json");
+
+  int httpCode = http.POST("{Temperature:" + temperature + "}");
+
+  if (httpCode > 0 && httpCode == HTTP_CODE_OK ) {
+    const String& payload = http.getString();
+  }
+
+  http.end();
+}
+
+void sendLightIntensityData(String intensity) {
+  String URI = "/api/v1/light/change/";
+  http.begin(client, BASE_URL);
+  http.addHeader("Content-Type", "application/json");
+
+  int httpCode = http.POST("{Intensity:" + intensity + "}");
+
+  if (httpCode > 0 && httpCode == HTTP_CODE_OK ) {
+    const String& payload = http.getString();
+  }
+
+  http.end();
 }

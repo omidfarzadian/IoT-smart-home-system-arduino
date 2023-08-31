@@ -10,6 +10,8 @@
 #define LED1 12
 #define LED2 10
 
+#define MOTOR 8
+
 DHT dht(DHTPIN, DHTTYPE);
 BH1750FVI lightSensor(BH1750FVI::k_DevModeContLowRes);
 
@@ -32,23 +34,22 @@ void setup() {
 
   pinMode(LED1, OUTPUT);
   pinMode(LED2, OUTPUT);
+  pinMode(MOTOR, OUTPUT);
 
   dht.begin();
   lightSensor.begin();  
 }
 
 void loop() {
-  readFromNodemcu();
+  // readFromNodemcu();
+  readSensorValues();
+  delay(1000);
 }
 
 void readFromNodemcu() {
   if (nodemcu.available()) {
     String response = nodemcu.readString();
     response.trim();
-    Serial.println(response);
-
-    Serial.println(response);
-    
     int states[3] = {0,0,0};
 
     int n = response.substring(0,1).toInt();
@@ -58,15 +59,18 @@ void readFromNodemcu() {
     }
 
     int lightIntensity = response.substring(1,2).toInt();
-    Serial.println(states[0]);
-    Serial.println(states[1]);
-
-    Serial.println(states[2]);
 
     changeLightState(states[2], lightIntensity);
     changeHeaterState(states[1]);
     changeMotorState(states[0]);
   }
+}
+
+void readSensorValues() {
+  readHumidity();
+  readTemperature();
+  readLightIntensity();
+  Serial.println();
 }
 
 void changeLightState(bool state, int lightIntensity) {
@@ -86,24 +90,24 @@ void changeLightState(bool state, int lightIntensity) {
 }
 
 void changeHeaterState(bool state) {
-
 }
 
 void changeMotorState(bool state) {
-
+  if(state) {
+    digitalWrite(MOTOR, HIGH);
+  } else {
+    digitalWrite(MOTOR, LOW);
+  }
 }
 
 void readTemperature() {
-  Serial.print("Temperature: ");
-  Serial.println(dht.readTemperature());
+  Serial.print(dht.readTemperature());
 }
 
 void readHumidity() {
-  Serial.print("Humidity: ");
-  Serial.println(dht.readHumidity());
+  Serial.print(dht.readHumidity());
 }
 
 void readLightIntensity() {
-  Serial.print("Light Intensity: ");
-  Serial.println(lightSensor.GetLightIntensity());
+  Serial.print(lightSensor.GetLightIntensity());
 }
