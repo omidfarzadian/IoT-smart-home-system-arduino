@@ -3,12 +3,11 @@
 #include <ESP8266WiFiMulti.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
-#include <SoftwareSerial.h>
 
 #define SSID "Lord of the Pings"
 #define PASS "7YWSKDAY"
 
-#define BASE_URL "http://192.168.1.98:2500"
+#define BASE_URL "http://37.152.163.82:2500"
 
 ESP8266WiFiMulti WiFiMulti;
 WiFiClient client;
@@ -33,8 +32,10 @@ void loop() {
 
     Serial.print(LED_STATUS*4 + HEATER_STATUS*2 + MOTOR_STATUS);
     Serial.println(LIGHT_INTENSITY);
+
+    readDataFromArduino();
   }
-  delay(1000);
+  delay(2000);
 }
 
 void connectToWifi() {
@@ -63,8 +64,6 @@ int getHeaterStatus() {
     }
 
     http.end();
-  } else {
-    Serial.println("[HTTP] Unable to connect");
   }
   return 0;
 }
@@ -85,8 +84,6 @@ int getLightStatus() {
     }
 
     http.end();
-  } else {
-    Serial.println("[HTTP] Unable to connect");
   }
   return 0;
 }
@@ -106,14 +103,12 @@ int getMotorStatus() {
     }
 
     http.end();
-  } else {
-    Serial.println("[HTTP] Unable to connect");
   }
   return 0;
 }
 
 int getLightIntensity() {
-  String URI = "/api/v1/light/intensity";
+  String URI = "/api/v1/light/level";
   
   if (http.begin(client, BASE_URL+URI)) {
     int httpCode = http.GET();
@@ -124,9 +119,65 @@ int getLightIntensity() {
     }
 
     http.end();
-  } else {
-    Serial.println("[HTTP] Unable to connect");
   }
   return 0;
 } 
 
+
+void readDataFromArduino() {
+  String data = Serial.readString();
+  data.trim();
+     
+  String humidity = data.substring(0, 4);
+  String temperature = data.substring(5, 9);
+  String intensity = data.substring(10, 12);
+  
+  sendHumidityData(humidity);
+  sendTemperatureData(temperature);
+  sendLightIntensityData(intensity);
+}
+
+void sendHumidityData(String humidity) {
+  String URI = "/api/v1/humidity/change/";
+  http.begin(client, BASE_URL+URI);
+  http.addHeader("Content-Type", "application/json");
+
+  String body = "{\"Humidity\":\"" + humidity + "\"}";
+  int httpCode = http.POST(body);
+
+  if (httpCode > 0 && httpCode == HTTP_CODE_OK ) {
+    const String& payload = http.getString();
+  }
+
+  http.end();
+}
+
+void sendTemperatureData(String temperature) {
+  String URI = "/api/v1/temperature/change/";
+  http.begin(client, BASE_URL+URI);
+  http.addHeader("Content-Type", "application/json");
+
+  String body = "{\"Temperature\":\"" + temperature + "\"}";
+  int httpCode = http.POST(body);
+
+  if (httpCode > 0 && httpCode == HTTP_CODE_OK ) {
+    const String& payload = http.getString();
+  }
+
+  http.end();
+}
+
+void sendLightIntensityData(String intensity) {
+  String URI = "/api/v1/light/changeIntensity";
+  http.begin(client, BASE_URL+URI);
+  http.addHeader("Content-Type", "application/json");
+
+  String body = "{\"Intensity\":\"" + intensity + "\"}";
+  int httpCode = http.POST(body);
+
+  if (httpCode > 0 && httpCode == HTTP_CODE_OK ) {
+    const String& payload = http.getString();
+  }
+
+  http.end();
+}
