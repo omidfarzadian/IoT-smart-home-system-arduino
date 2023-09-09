@@ -4,13 +4,13 @@
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
 
-#define SSID "Lord of the Pings"
-#define PASS "7YWSKDAY"
+#define SSID "Optus-4G-E5577-37FF"
+#define PASS "705qtj1y"
 
 #define BASE_URL "http://37.152.163.82:2500"
 
 ESP8266WiFiMulti WiFiMulti;
-WiFiClient client;
+WiFiClient client;  
 HTTPClient http;
 
 int LED_STATUS = 0;
@@ -35,7 +35,7 @@ void loop() {
 
     readDataFromArduino();
   }
-  delay(2000);
+  delay(1000);
 }
 
 void connectToWifi() {
@@ -131,14 +131,14 @@ void readDataFromArduino() {
   String humidity = data.substring(0, 4);
   String temperature = data.substring(5, 9);
   String intensity = data.substring(10, 12);
-  
+
   sendHumidityData(humidity);
   sendTemperatureData(temperature);
   sendLightIntensityData(intensity);
 }
 
 void sendHumidityData(String humidity) {
-  String URI = "/api/v1/humidity/change/";
+  String URI = "/api/v1/humidity/change";
   http.begin(client, BASE_URL+URI);
   http.addHeader("Content-Type", "application/json");
 
@@ -153,7 +153,7 @@ void sendHumidityData(String humidity) {
 }
 
 void sendTemperatureData(String temperature) {
-  String URI = "/api/v1/temperature/change/";
+  String URI = "/api/v1/temperature/change";
   http.begin(client, BASE_URL+URI);
   http.addHeader("Content-Type", "application/json");
 
@@ -172,7 +172,7 @@ void sendLightIntensityData(String intensity) {
   http.begin(client, BASE_URL+URI);
   http.addHeader("Content-Type", "application/json");
 
-  String body = "{\"Intensity\":\"" + intensity + "\"}";
+  String body = "{\"intensity\":\"" + intensity + "\"}";
   int httpCode = http.POST(body);
 
   if (httpCode > 0 && httpCode == HTTP_CODE_OK ) {

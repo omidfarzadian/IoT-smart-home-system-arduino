@@ -37,13 +37,15 @@ void setup() {
 void loop() {
   readFromNodemcu();
   readSensorValues();
-  delay(2000);
+  delay(1000);
 }
 
 void readFromNodemcu() {
   if (nodemcu.available()) {
     String response = nodemcu.readString();
     response.trim();
+
+    Serial.println(response);
 
     int states[3] = {0,0,0};
 
@@ -85,10 +87,10 @@ void changeLightState(bool state, int lightIntensity) {
 
 void changeHeaterState(bool state) {
   if (state) {
-    digitalWrite(HEATER, HIGH);
+    digitalWrite(HEATER, LOW);
     digitalWrite(HEATER_LED, HIGH);
   } else {
-    digitalWrite(HEATER, LOW);
+    digitalWrite(HEATER, HIGH);
     digitalWrite(HEATER_LED, LOW);
   }
 }
@@ -112,5 +114,5 @@ void readHumidity() {
 }
 
 void readLightIntensity() {
-  nodemcu.print(lightSensor.GetLightIntensity());
+  nodemcu.print(lightSensor.GetLightIntensity());  
 }
